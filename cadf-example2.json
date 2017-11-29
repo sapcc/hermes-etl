@@ -1,0 +1,41 @@
+{
+    "publisher_id": "identity.keystone-490936964-test",
+    "tenant_id": "ae63ddf2076d4342a56eb049e37a7621",
+    "_unique_id": "9e483149c66d495bb3a6ef565f0df972",
+    "event_type": "identity.role_assignment.created",
+    "@timestamp": "2017-08-23T01:02:05.383Z",
+    "payload": {
+      "role": "ccbb1e6dc65c4f47aba5c8b58de9441f",
+      "initiator": {
+        "typeURI": "service/security/account/user",
+        "project_id": "6a030751147a45c0863c3b5bde32c744",
+        "user_id": "53942154572f5038fd52d584898540dea06a5fef0c0f2c4c0556d1bc595023e1",
+        "host": {
+          "agent": "Ruby",
+          "address": "100.65.0.13"
+        },
+        "id": "4106ef7c2736585391f3f400cbdd0be2"
+      },
+      "project": "ae63ddf2076d4342a56eb049e37a7621",
+      "eventType": "activity",
+      "target": {
+        "typeURI": "service/security/account/user",
+        "id": "b9982727-19a6-553d-8f27-e91649dbe803"
+      },
+      "observer": {
+        "typeURI": "service/security",
+        "id": "dbfba14d-b723-5e5c-abb2-14f134dc0208"
+      },
+      "typeURI": "http://schemas.dmtf.org/cloud/audit/1.0/event",
+      "eventTime": "2017-08-17T09:02:05.379394+0000",
+      "action": "created.role_assignment",
+      "id": "dbdb44a4-c7be-5aa3-8f71-a3c7effa9457",
+      "user": "bc4fe819a52ad60f944d21dcfb0eff7fdbc782c15517cb0ab65678280b9f1caf",
+      "inherited_to_projects": false,
+      "outcome": "success"
+    },
+    "@version": "1",
+    "message_id": "37d10bf8-5ef8-4234-b4bd-4ca588f67965",
+    "priority": "INFO",
+    "timestamp": "2017-08-17 09:02:05.379872"
+  }

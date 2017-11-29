@@ -1,0 +1,38 @@
+{
+  "publisher_id": "identity.keystone-150377632-4jy3r",
+    "tenant_id": "",
+    "_unique_id": "420fbc5907fa486b83d34bcecc930e74",
+    "event_type": "identity.OS-TRUST:trust.created",
+    "@timestamp": "2017-07-20T13:43:38.373Z",
+    "payload": {
+      "observer": {
+        "typeURI": "service/security",
+        "id": "6e8140e3-92c1-5495-a8f9-4d80a00ee93e"
+      },
+      "resource_info": "e48dbf7aa72440a39be1737541103a39",
+      "typeURI": "http://schemas.dmtf.org/cloud/audit/1.0/event",
+      "initiator": {
+        "typeURI": "service/security/account/user",
+        "project_id": "ae63ddf2076d4342a56eb049e37a7621",
+        "user_id": "4a5588edf90d66e492e933d335a1f1908e4d308056cb712ba9484b67ee234696",
+        "host": {
+          "agent": "python-keystoneclient",
+          "address": "100.66.1.102"
+        },
+        "id": "e187232ad6bd58f18967d34d8c69c887"
+      },
+      "eventTime": "2017-07-20T13:43:38.368933+0000",
+      "action": "created.OS-TRUST:trust",
+      "eventType": "activity",
+      "id": "b0d05568-65f1-5277-9368-72988b563db2",
+      "outcome": "success",
+      "target": {
+        "typeURI": "data/security/trust",
+        "id": "e48dbf7aa72440a39be1737541103a39"
+      }
+    },
+    "@version": "1",
+    "message_id": "e142e6cb-cb94-4ee2-b369-cc5c6f0bf0a7",
+    "priority": "INFO",
+    "timestamp": "2017-07-20 13:43:38.369513"
+}
