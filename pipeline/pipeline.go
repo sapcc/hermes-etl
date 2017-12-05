@@ -10,7 +10,8 @@ import (
 	elastic "gopkg.in/olivere/elastic.v5"
 )
 
-// Struct for MSG, Change from Kibana syntax to RabbitMQ
+// Struct for Audit Event, Change from Kibana syntax to RabbitMQ
+// TODO: Update for new event
 type Event struct {
 	ID     string      `json:"_id"`
 	Index  string      `json:"_index"`
