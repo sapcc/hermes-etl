@@ -7,76 +7,108 @@ URI for connecting to RabbitMQ, Queue
 */
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 
-	"github.com/notque/hermes-etl/pipeline"
 	"github.com/streadway/amqp"
-	elastic "gopkg.in/olivere/elastic.v5"
 )
 
-type ConnectSourcer interface {
-	ConnectSource() string
+type Consumer struct {
+	Conn    *amqp.Connection
+	Channel *amqp.Channel
+	Tag     string
+	Done    chan error
 }
 
-// Connection details for RabbitMQ
-type Source struct {
-	URI   string
-	Queue string
-}
+func NewConsumer(amqpURI, exchangeType, queueName, key, ctag string) (*Consumer, error) {
+	c := &Consumer{
+		Conn:    nil,
+		Channel: nil,
+		Tag:     ctag,
+		Done:    make(chan error),
+	}
 
-// Connect to RabbitMQ
-func (s Source) ConnectSource(es *elastic.Client) string {
-	conn, err := amqp.Dial(s.URI)
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
+	var err error
 
-	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		s.Queue, // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
-	)
-	failOnError(err, "Failed to declare a queue")
-
-	msgs, err := ch.Consume(
-		q.Name, //Queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    //args
-	)
-	failOnError(err, "Failed to register a consumer")
-
-	forever := make(chan bool)
+	log.Printf("dialing %q", amqpURI)
+	c.Conn, err = amqp.Dial(amqpURI)
+	if err != nil {
+		return nil, fmt.Errorf("Dial: %s", err)
+	}
 
 	go func() {
-		for d := range msgs {
-			// Transform Step with Drop and Rename Methods
-			//Transform.Rules(d.Body) excepts a pointer to the message
-			//log.Printf("Received a message: %s", d.Body)
-			pipeline.Incoming(d.Body, es)
-		}
+		fmt.Printf("closing: %s", <-c.Conn.NotifyClose(make(chan *amqp.Error)))
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
+	log.Printf("got Connection, getting Channel")
+	c.Channel, err = c.Conn.Channel()
+	if err != nil {
+		return nil, fmt.Errorf("Channel: %s", err)
+	}
 
-	return "test"
+	log.Printf("declaring Queue %q", queueName)
+	queue, err := c.Channel.QueueDeclare(
+		queueName, // name of the queue
+		false,      // durable
+		false,     // delete when usused
+		false,     // exclusive
+		false,     // noWait
+		nil,       // arguments
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Queue Declare: %s", err)
+	}
+
+	log.Printf("declared Queue (%q %d messages, %d consumers)",
+		queue.Name, queue.Messages, queue.Consumers)
+
+	return c, nil
 }
 
-// Helper function for errors for each amqp call
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-		panic(fmt.Sprintf("%s: %s", msg, err))
+func (c *Consumer) Shutdown() error {
+	// will close() the deliveries channel
+	if err := c.Channel.Cancel(c.Tag, true); err != nil {
+		return fmt.Errorf("Consumer cancel failed: %s", err)
 	}
+
+	if err := c.Conn.Close(); err != nil {
+		return fmt.Errorf("AMQP connection close error: %s", err)
+	}
+
+	defer log.Printf("AMQP shutdown OK")
+
+	// wait for handle() to exit
+	return <-c.Done
+}
+
+func ConsumeQueue(c *amqp.Channel, queue string, done chan error) error {
+	deliveries, err := c.Consume(queue, "", false, false, false, false, nil)
+	if err != nil {
+		log.Panicf("All the problems")
+	}
+
+	for {
+		select {
+		case <-done:
+			return nil
+		case msg := <-deliveries:
+			var result map[string]interface{}
+			err := json.NewDecoder(bytes.NewReader(msg.Body)).Decode(&result)
+			if err != nil {
+				log.Panicf("couldn't decode message to JSON: %s", err)
+			}
+			
+			//Handle Message
+			log.Printf(
+				"got %dB delivery: [%v] %q",
+				len(msg.Body),
+				msg.DeliveryTag,
+				msg.Body,
+			)
+			msg.Ack(false)
+		}
+	}
+
 }

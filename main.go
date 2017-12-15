@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
-
-	"github.com/sapcc/hermes-etl/sink"
+	"log"	
+	//"github.com/sapcc/hermes-etl/sink"
 	"github.com/sapcc/hermes-etl/source"
 	"github.com/spf13/viper"
 )
@@ -18,10 +18,13 @@ func main() {
 
 	//URI := "amqp://guest:guest@localhost:5672/"
 	//fmt.Println(URI)
-	sinkconn := sink.Sink{URI: viper.GetString("elasticsearch.uri")}
-	sink := sinkconn.ConnectSink()
-	mqconn := source.Source{URI: viper.GetString("rabbitmq.uri"), Queue: viper.GetString("rabbitmq.queue")}
-	mqconn.ConnectSource(sink)
+	//mqconn := source.Source{URI: viper.GetString("rabbitmq.uri"), Queue: viper.GetString("rabbitmq.queue")}
+	c, err := source.NewConsumer(viper.GetString("rabbitmq.uri"), "", viper.GetString("rabbitmq.queue"), "", "")
+	if err != nil {
+		log.Fatal(err)
+	}
+	source.ConsumeQueue(c.Channel, viper.GetString("rabbitmq.queue"), c.Done)
+
 
 }
 
@@ -40,7 +43,7 @@ func parseCmdFlags() *string {
 func setDefaultConfig() {
 	viper.SetDefault("elasticsearch.uri", "http://127.0.0.1:9200")
 	viper.SetDefault("rabbitmq.uri", "amqp://guest:guest@localhost:5672/")
-	viper.SetDefault("rabbitmq.queue", "test")
+	viper.SetDefault("rabbitmq.queue", "hello")
 }
 
 // readConfig reads the configuration file from the configPath
